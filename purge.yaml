@@ -1,0 +1,56 @@
+- hosts: all
+  become: yes
+  tasks:
+  - name: reset the cluster
+    shell: kubeadm reset -f
+
+  - name: delete APT Transport HTTPS
+    apt:
+      name: apt-transport-https
+      state: absent
+
+  - name: delete Kubernetes' APT repository
+    apt_repository:
+     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+     state: absent
+     filename: 'kubernetes'
+
+  - name: delete kubelet
+    apt:
+      name: kubelet
+      state: absent
+      update_cache: true
+
+  - name: delete kubeadm
+    apt:
+      name: kubeadm
+      state: absent
+
+
+- hosts: masters
+  become: yes
+  tasks:
+  - name: delete kubectl
+    apt:
+      name: kubectl
+      state: absent
+
+  - name: delete cluster_initialized.txt
+    file:
+      path: $HOME/cluster_initialized.txt
+      state: absent
+
+  - name: delete pod_network_setup.txt
+    become_user: niel
+    file:
+      path: $HOME/pod_network_setup.txt
+      state: absent
+
+
+- hosts: workers
+  become: yes
+  tasks:
+  - name: delete node_joined.txt
+    file:
+      path: $HOME/node_joined.txt
+      state: absent
