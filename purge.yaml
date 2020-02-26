@@ -4,10 +4,26 @@
   - name: reset the cluster
     shell: kubeadm reset -f
 
+  - name: delete CNI configuration
+    file:
+      path: /etc/cni/net.d
+      state: absent
+
   - name: delete APT Transport HTTPS
     apt:
       name: apt-transport-https
       state: absent
+
+    #- name: download weave binary
+    # shell: sudo curl -L git.io/weave -o /usr/local/bin/weave && sudo chmod a+x /usr/local/bin/weave
+    # when: network == "weave"
+
+    #- name: reset weave
+    #- shell: weave reset
+    #- when: network == "weave"
+
+    #- name: delete flannel interfaces
+    #  shell: ip link delete cni0 && ip link delete flannel.1
 
   - name: delete Kubernetes' APT repository
     apt_repository:
@@ -25,6 +41,12 @@
     apt:
       name: kubeadm
       state: absent
+      update_cache: true
+
+  - name: delete kubernetes-cni
+    apt:
+      name: kubernetes-cni
+      state: absent
 
 
 - hosts: masters
@@ -34,7 +56,7 @@
     apt:
       name: kubectl
       state: absent
-
+      
   - name: delete cluster_initialized.txt
     file:
       path: $HOME/cluster_initialized.txt
@@ -44,6 +66,12 @@
     become_user: niel
     file:
       path: $HOME/pod_network_setup.txt
+      state: absent
+
+  - name: delete .kube folder
+    become_user: niel
+    file:
+      path: $HOME/.kube
       state: absent
 
 
